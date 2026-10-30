@@ -1,0 +1,7 @@
+.env
+faces/
+uploads/
+*.db
+node_modules/
+__pycache__/
+.vscode/
