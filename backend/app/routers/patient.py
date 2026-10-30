@@ -7,6 +7,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import Patient
 from app.schemas import PatientOut, PatientUpdate
+from app.services.sensor_monitor import monitor
 
 router = APIRouter(prefix="/patient", tags=["patient"], dependencies=[Depends(get_current_user)])
 
@@ -29,4 +30,5 @@ def update_patient(data: PatientUpdate, db: Session = Depends(get_db)):
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(patient, field, value)
     db.commit()
+    monitor.load_patient()  # geofence picks up a new home / radius immediately
     return patient

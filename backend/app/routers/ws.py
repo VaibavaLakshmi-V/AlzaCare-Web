@@ -1,4 +1,9 @@
-"""Live event feed. Connect to /ws?token=<JWT>."""
+"""Live feed. Connect to /ws?token=<JWT>.
+
+Messages are JSON with a "kind" field:
+- "event": a new Event (all EventOut fields alongside "kind")
+- "sensor": about once per second, the latest reading, scenario and geofence state
+"""
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 
 from app.auth import user_from_token

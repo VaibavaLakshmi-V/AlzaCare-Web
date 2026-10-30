@@ -22,7 +22,7 @@ async def record_event(
         db.commit()
         db.refresh(event)
         out = EventOut.model_validate(event)
-    await manager.broadcast(out.model_dump(mode="json"))
+    await manager.broadcast({"kind": "event", **out.model_dump(mode="json")})
     return out
 
 
@@ -36,8 +36,9 @@ async def create_alert(
     event = await record_event(type, message, severity, source, snapshot_path)
     log.info("Alert #%d [%s] %s: %s", event.id, severity, type, message)
 
-    # 3: Telegram (never raises)
-    telegram = await send_telegram(f"AlzaCare alert [{severity.upper()}] {type}\n{message}")
+    # 3: Telegram (never raises). Simulated alerts come only from the sensor simulator; say so honestly.
+    label = "[SIMULATED SENSOR] " if source == "simulated" else ""
+    telegram = await send_telegram(f"{label}AlzaCare alert [{severity.upper()}] {type}\n{message}")
 
     # 4: simulated GSM SMS, logged as its own event
     sms_event = await record_event("sms", f"SIMULATED GSM SMS SENT: {message}", severity, "simulated")

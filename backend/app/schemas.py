@@ -4,7 +4,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
+from app.sensors.simulated import SCENARIOS
+
 Severity = Literal["info", "warning", "critical"]
+Scenario = Literal[SCENARIOS]
 HHMM = r"^([01]\d|2[0-3]):[0-5]\d$"
 
 
@@ -87,6 +90,57 @@ class ReminderOut(BaseModel):
     text: str
     time_of_day: str
     active: bool
+
+
+# --- Live recognition ---
+class RecognizedFace(BaseModel):
+    name: str | None
+    relationship: str | None
+    status: Literal["known", "unknown"]
+    distance: float | None  # closest known face; None if nobody is enrolled
+
+
+class RecognitionResult(BaseModel):
+    faces: list[RecognizedFace]
+    speak: str | None  # set only on the frame where someone is announced
+    state: Literal["no_face", "tracking", "announced"]
+
+
+# --- Sensors ---
+class SensorReadingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    ts: float
+    ax: float
+    ay: float
+    az: float
+    lat: float
+    lng: float
+    heart_rate: int
+    spo2: int
+    battery: float
+
+
+class ScenarioIn(BaseModel):
+    scenario: Scenario
+
+
+class SimState(BaseModel):
+    scenario: Scenario
+    scenarios: list[str]
+    reading: SensorReadingOut | None
+
+
+class PatientStatus(BaseModel):
+    scenario: str | None  # None when real hardware is connected
+    simulated: bool
+    reading: SensorReadingOut | None
+    in_safe_zone: bool | None
+    distance_from_home_m: float | None
+    safe_radius_m: float | None
+    last_known_person: EventOut | None  # latest face_known event
+    unread_alerts: int  # warning/critical alerts after `since`
+    latest_alert: EventOut | None
 
 
 # --- Alerts ---
