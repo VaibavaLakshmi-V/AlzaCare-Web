@@ -17,3 +17,37 @@
     @apply rounded-2xl bg-white shadow-soft;
   }
 }
+
+/* Patient marker on the map: solid dot with a pulsing ring */
+.patient-marker {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 26px;
+  --marker: #0d9488;
+}
+.patient-marker--outside {
+  --marker: #dc2626;
+}
+.patient-marker > span,
+.patient-marker::before {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  content: '';
+}
+.patient-marker > span {
+  inset: 5px;
+  background: var(--marker);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.35);
+}
+.patient-marker::before {
+  background: var(--marker);
+  opacity: 0.35;
+  animation: marker-pulse 1.8s ease-out infinite;
+}
+@keyframes marker-pulse {
+  from { transform: scale(0.6); opacity: 0.5; }
+  to { transform: scale(2.2); opacity: 0; }
+}

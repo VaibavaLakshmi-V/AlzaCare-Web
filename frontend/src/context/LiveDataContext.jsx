@@ -18,6 +18,13 @@ export function LiveDataProvider({ children }) {
   const [banner, setBanner] = useState(null) // critical event shown at the top
   const [unseenAlerts, setUnseenAlerts] = useState(0)
   const bannerTimer = useRef()
+  const liveListeners = useRef(new Set())
+
+  // Subscribe to events as they arrive over the WebSocket (not the initial history). Returns unsubscribe.
+  const onLiveEvent = useCallback((listener) => {
+    liveListeners.current.add(listener)
+    return () => liveListeners.current.delete(listener)
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -55,6 +62,7 @@ export function LiveDataProvider({ children }) {
         setEvents((prev) => (prev.some((e) => e.id === event.id) ? prev : [event, ...prev]))
         if (isAlert(event)) setUnseenAlerts((n) => n + 1)
         if (event.severity === 'critical' && event.type !== 'sms') showBanner(event)
+        liveListeners.current.forEach((listener) => listener(event))
       }
     },
     [showBanner],
@@ -69,12 +77,16 @@ export function LiveDataProvider({ children }) {
     const inSafeZone = sensor ? sensor.in_safe_zone : status?.in_safe_zone ?? null
     const distance = sensor ? sensor.distance_from_home_m : status?.distance_from_home_m ?? null
     const simulated = sensor?.simulated ?? status?.simulated ?? false
+    const scenario = sensor?.scenario ?? status?.scenario ?? null
     const lastKnownPerson = events.find((e) => e.type === 'face_known') ?? status?.last_known_person ?? null
     return {
-      patient, status, events, reading, inSafeZone, distance, simulated, lastKnownPerson,
-      connected, loadError, refresh, banner, dismissBanner, unseenAlerts, markAlertsSeen,
+      patient, status, events, reading, inSafeZone, distance, simulated, scenario, lastKnownPerson,
+      connected, loadError, refresh, banner, dismissBanner, unseenAlerts, markAlertsSeen, onLiveEvent,
     }
-  }, [patient, status, sensor, events, connected, loadError, refresh, banner, dismissBanner, unseenAlerts, markAlertsSeen])
+  }, [
+    patient, status, sensor, events, connected, loadError, refresh, banner, dismissBanner, unseenAlerts,
+    markAlertsSeen, onLiveEvent,
+  ])
 
   return <LiveDataContext.Provider value={value}>{children}</LiveDataContext.Provider>
 }

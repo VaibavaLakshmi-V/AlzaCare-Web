@@ -90,9 +90,43 @@ export async function login(username, password) {
   return (await res.json()).access_token
 }
 
+const sendJson = async (path, method, json) => (await apiFetch(path, { method, json })).json()
+
 export const getStatus = () => getJson('/status')
-export const getPatient = () => getJson('/patient')
 export const getEvents = (limit = 500) => getJson(`/events?limit=${limit}`)
+
+// Patient profile
+export const getPatient = () => getJson('/patient')
+export const updatePatient = (data) => sendJson('/patient', 'PUT', data)
+
+// Known people
+export const getKnownPersons = () => getJson('/known-persons')
+export const personPhotoPath = (id) => `/known-persons/${id}/photo`
+export const deletePerson = (id) => apiFetch(`/known-persons/${id}`, { method: 'DELETE' })
+export async function enrollPerson({ name, relationship, photo }) {
+  const form = new FormData()
+  form.append('name', name)
+  form.append('relationship', relationship)
+  form.append('photo', photo, photo.name || 'photo.jpg')
+  return (await apiFetch('/known-persons', { method: 'POST', body: form })).json()
+}
+
+// Reminders
+export const getReminders = () => getJson('/reminders')
+export const createReminder = (data) => sendJson('/reminders', 'POST', data)
+export const updateReminder = (id, data) => sendJson(`/reminders/${id}`, 'PUT', data)
+export const deleteReminder = (id) => apiFetch(`/reminders/${id}`, { method: 'DELETE' })
+
+// Simulator
+export const getSimState = () => getJson('/sim/state')
+export const setScenario = (scenario) => sendJson('/sim/scenario', 'POST', { scenario })
+
+// Live face recognition: one JPEG frame in, faces + optional sentence to speak out
+export async function recognizeFrame(blob) {
+  const form = new FormData()
+  form.append('frame', blob, 'frame.jpg')
+  return (await apiFetch('/recognize', { method: 'POST', body: form })).json()
+}
 
 // Protected images (snapshots, photos) need the Bearer header, so fetch them as blobs
 export async function fetchImageUrl(path) {

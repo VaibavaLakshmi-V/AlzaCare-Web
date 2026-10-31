@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
-  AlertCircle, BatteryFull, BatteryLow, BatteryMedium, ChevronRight, Droplets, HeartPulse, RefreshCw, UserCheck,
+  AlertCircle, BatteryFull, BatteryLow, BatteryMedium, ChevronRight, RefreshCw, UserCheck,
 } from 'lucide-react'
 import EventItem from '../components/EventItem'
 import StatusCard from '../components/StatusCard'
@@ -8,7 +8,7 @@ import VitalCard from '../components/VitalCard'
 import { useLiveData } from '../context/LiveDataContext'
 import { useNow } from '../hooks/useNow'
 import { timeAgo } from '../utils/time'
-import { BATTERY_LOW, HEART_RATE_HIGH, HEART_RATE_LOW, RECENT_CRITICAL_MS, SPO2_LOW } from '../utils/thresholds'
+import { BATTERY_LOW, RECENT_CRITICAL_MS } from '../utils/thresholds'
 
 function batteryIcon(level) {
   if (level == null || level >= 60) return BatteryFull
@@ -37,8 +37,6 @@ export default function HomePage() {
     reason = 'No location yet'
   }
 
-  const hr = reading?.heart_rate
-  const spo2 = reading?.spo2
   const battery = reading?.battery
 
   return (
@@ -57,30 +55,14 @@ export default function HomePage() {
 
       <section>
         <div className="mb-2 flex items-center justify-between px-1">
-          <h2 className="text-sm font-semibold text-slate-700">Vitals</h2>
+          <h2 className="text-sm font-semibold text-slate-700">Wearable</h2>
           {simulated && (
             <span className="rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-violet-700">
               SIMULATED SENSORS
             </span>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <VitalCard
-            icon={HeartPulse}
-            label="Heart"
-            value={hr}
-            unit="bpm"
-            alert={hr != null && (hr > HEART_RATE_HIGH || hr < HEART_RATE_LOW)}
-            hint={hr == null ? null : hr > HEART_RATE_HIGH ? 'High' : hr < HEART_RATE_LOW ? 'Low' : 'Normal'}
-          />
-          <VitalCard
-            icon={Droplets}
-            label="SpO₂"
-            value={spo2}
-            unit="%"
-            alert={spo2 != null && spo2 < SPO2_LOW}
-            hint={spo2 == null ? null : spo2 < SPO2_LOW ? 'Low' : 'Normal'}
-          />
+        <div className="grid grid-cols-1 gap-3">
           <VitalCard
             icon={batteryIcon(battery)}
             label="Battery"
